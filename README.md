@@ -46,4 +46,4 @@ scarb run
 
 If you have any questions or run into issues, feel free to reach out to us in our Telegram group:
 
-👉 [Join the Telegram Group](#)
+👉 [Join the Telegram Group](https://t.me/+A8UqstPvpU8wZDk0)
