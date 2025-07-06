@@ -120,6 +120,11 @@ pub mod SwapX {
             // Emit an event for successful deposit
             self.emit(TokenDeposited { user: depositor, token_address, amount });
         }
+
+        // Retrieves the balance for a specific user and token
+        fn get_user_token_balance(self: @ContractState, user: ContractAddress, token_address: ContractAddress) -> u256 {
+            self.balance.entry((user, token_address)).read()
+        }
     }
 
     //This function will only work when the amount is less than or equal to the user's balance for that token.
