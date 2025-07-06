@@ -3,7 +3,8 @@ pub mod SwapX {
     use core::num::traits::Zero;
     use openzeppelin_access::accesscontrol::{AccessControlComponent, DEFAULT_ADMIN_ROLE};
     use openzeppelin_introspection::src5::SRC5Component;
-    use starknet::{ContractAddress, get_caller_address};
+    use openzeppelin::token::erc20::interface::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+    use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use starknet::storage::{
         Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
     };
@@ -28,12 +29,21 @@ pub mod SwapX {
         SRC5Event: SRC5Component::Event,
         TokenSupported: TokenSupported,
         MerchantPaid:MerchantPaid,
+        TokenDeposited: TokenDeposited,
     }
 
     /// Emitted when a token is whitelisted
     #[derive(Drop, starknet::Event)]
     pub struct TokenSupported {
         pub token_address: ContractAddress,
+    }
+
+    /// Emitted when a user deposits token into the contract
+    #[derive(starknet::Event, Drop)]
+    struct TokenDeposited {
+        user: ContractAddress,
+        token_address: ContractAddress,
+        amount: u256,
     }
 
     
@@ -80,6 +90,35 @@ pub mod SwapX {
         /// Returns whether `token_address` is supported
         fn is_token_supported(self: @ContractState, token_address: ContractAddress) -> bool {
             self.supported_tokens.entry(token_address).read()
+        }
+
+        /// Allows users to deposit tokens into the contract
+        fn deposit(ref self: ContractState, token_address: ContractAddress, amount: u256) {
+            let depositor: ContractAddress = get_caller_address();
+            let contract: ContractAddress = get_contract_address();
+            let token_is_supported: bool = self.is_token_supported(token_address);
+    
+            // Check if the token is in the supported tokens list
+            assert(token_is_supported, Errors::UNSUPPORTED_TOKEN);
+    
+            assert(amount.is_non_zero(), Errors::INVALID_AMOUNT);
+    
+            // Transfer the tokens from the user to the contract
+            // Note: The depositor must approve the contract to spend at least `amount` of tokens
+            // Note: The depositor must have enough balance to cover the `amount`
+            let token_dispatcher = ERC20ABIDispatcher { contract_address: token_address };
+            token_dispatcher.transfer_from(depositor, contract, amount);
+    
+            // Update the user's balance for the token
+            let user_current_balance = self.balance.entry((depositor, token_address)).read();
+            let new_balance = user_current_balance + amount;
+            self.balance.entry((depositor, token_address)).write(new_balance);
+    
+            // TODO: (Optional) Update liquidity pool
+            // state variable: // liquidity_pools: Map<ContractAddress, u256>
+    
+            // Emit an event for successful deposit
+            self.emit(TokenDeposited { user: depositor, token_address, amount });
         }
     }
 
