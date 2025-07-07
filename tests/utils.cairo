@@ -1,6 +1,7 @@
 use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use starknet::ContractAddress;
-use openzeppelin::token::erc20::interface::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+use openzeppelin_token::erc20::interface::{ERC20ABIDispatcher,};
+use swapx::mocks::erc20::{IMintableDispatcher,};
 
 pub const OWNER: ContractAddress = 'owner'.try_into().unwrap();
 pub const USER1: ContractAddress = 'user1'.try_into().unwrap();
@@ -18,13 +19,12 @@ pub fn deploy_swapx_contract(owner: ContractAddress) -> ContractAddress {
     deploy_contract("SwapX", calldata)
 }
 
-pub fn deploy_mock_erc20() -> ERC20ABIDispatcher {
+pub fn deploy_mock_erc20() -> IMintableDispatcher {
     let owner = OWNER;
     let contract_class = declare("ERC20").unwrap().contract_class();
-
     let mut constructor_args: Array<felt252> = array![];
     owner.serialize(ref constructor_args);
     let (contract_address, _) = contract_class.deploy(@constructor_args).unwrap();
 
-    ERC20ABIDispatcher { contract_address: contract_address }
+    IMintableDispatcher { contract_address: contract_address }
 }

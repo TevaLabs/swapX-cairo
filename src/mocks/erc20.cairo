@@ -1,8 +1,20 @@
+use starknet::ContractAddress;
+
+#[starknet::interface]
+pub trait IMintable<TContractState> {
+    fn mint(ref self: TContractState, recipient: ContractAddress, amount: u256);
+    // fn approve( ref self: TContractState, spender: ContractAddress, amount: u256,
+    // ) -> bool;
+    // fn balance_of(ref self: TContractState, account: ContractAddress) -> u256;
+}
+
 #[starknet::contract]
-mod ERC20 {
-    use openzeppelin::access::ownable::OwnableComponent;
-    use openzeppelin::token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+pub mod ERC20 {
+    use openzeppelin_access::ownable::OwnableComponent;
+    use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
     use starknet::{ContractAddress};
+    use super::IMintable;
+
 
     component!(path: ERC20Component, storage: erc20, event: ERC20Event);
     component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
@@ -40,7 +52,22 @@ mod ERC20 {
         self.ownable.initializer(owner);
 
         // mint some tokens to the owner
-        let supply: u256 = 5_000_000_000_000;
+        let supply: u256 = 5_000_000_000_000; //
         self.erc20.mint(owner, supply);
+    }
+
+    #[abi(embed_v0)]
+    impl MintableImpl of IMintable<ContractState> {
+        fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
+            self.erc20.mint(recipient, amount);
+        }
+
+        // fn approve(ref self: ContractState, spender: ContractAddress, amount: u256) -> bool {
+        //     self.erc20.approve(spender, amount)
+        // }
+
+        // fn balance_of(ref self: ContractState, account: ContractAddress) -> u256 {
+        //     self.erc20.balance_of(account)
+        // }
     }
 }

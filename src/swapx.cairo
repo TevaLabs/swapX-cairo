@@ -3,7 +3,7 @@ pub mod SwapX {
     use core::num::traits::Zero;
     use openzeppelin_access::accesscontrol::{AccessControlComponent, DEFAULT_ADMIN_ROLE};
     use openzeppelin_introspection::src5::SRC5Component;
-    use openzeppelin::token::erc20::interface::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
+    use openzeppelin_token::erc20::interface::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
     use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use starknet::storage::{
         Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
@@ -40,10 +40,10 @@ pub mod SwapX {
 
     /// Emitted when a user deposits token into the contract
     #[derive(starknet::Event, Drop)]
-    struct TokenDeposited {
-        user: ContractAddress,
-        token_address: ContractAddress,
-        amount: u256,
+    pub struct TokenDeposited {
+        pub user: ContractAddress,
+        pub token_address: ContractAddress,
+        pub amount: u256,
     }
 
     
