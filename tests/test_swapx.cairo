@@ -120,3 +120,136 @@ fn test_deposit_success() {
     spy.assert_emitted(@expected_events);
 }
 
+#[should_panic(expected: 'Amount cannot be zero')]
+#[test]
+fn test_deposit_zero_amount_fails() {
+    let owner = OWNER;
+    let depositor = USER1;
+    let mint_amount = 1000_u256;
+
+    // Deploy contract
+    let swapx_address = deploy_swapx_contract(owner);
+    let swapx = ISwapXDispatcher { contract_address: swapx_address };
+    let eth_dispatcher = deploy_mock_erc20();
+    let erc20 = ERC20ABIDispatcher { contract_address: eth_dispatcher.contract_address };
+    let eth_address = eth_dispatcher.contract_address;
+
+    // Prepare user for deposit
+    start_cheat_caller_address(eth_address, owner);
+    eth_dispatcher.mint(depositor, mint_amount);
+    stop_cheat_caller_address(eth_address);
+
+    // Approve spender to use tokens
+    start_cheat_caller_address(eth_address, depositor);
+    erc20.approve(swapx_address, 1000_u256);
+    stop_cheat_caller_address(eth_address);
+
+    // Owner with admin role whitelist token address
+    start_cheat_caller_address(swapx_address, owner);
+    swapx.add_supported_token(eth_address);
+    stop_cheat_caller_address(swapx_address);
+
+    // User attempts to deposit zero amount
+    start_cheat_caller_address(swapx_address, depositor);
+    swapx.deposit(eth_address, 0_u256);
+    stop_cheat_caller_address(swapx_address);
+}
+
+#[should_panic(expected: 'Token is not supported')]
+#[test]
+fn test_deposit_unsupported_token_fails() {
+    let owner = OWNER;
+    let depositor = USER1;
+
+    // Deploy contract
+    let swapx_address = deploy_swapx_contract(owner);
+    let swapx = ISwapXDispatcher { contract_address: swapx_address };
+    let eth_dispatcher = deploy_mock_erc20();
+    let eth_address = eth_dispatcher.contract_address;
+    let erc20 = ERC20ABIDispatcher { contract_address: eth_address };
+
+    // Prepare user for deposit
+    start_cheat_caller_address(eth_address, owner);
+    eth_dispatcher.mint(depositor, 1000_u256);
+    stop_cheat_caller_address(eth_address);
+
+    // Approve spender to use tokens
+    start_cheat_caller_address(eth_address, depositor);
+    erc20.approve(swapx_address, 1000_u256);
+    stop_cheat_caller_address(eth_address);
+
+    // User attempts to deposit unsupported token
+    start_cheat_caller_address(swapx_address, depositor);
+    swapx.deposit(eth_address, 500_u256); // Eth is not supported yet
+    stop_cheat_caller_address(swapx_address);
+}
+
+#[should_panic(expected: 'ERC20: insufficient allowance')]
+#[test]
+fn test_deposit_insufficient_token_balance_fails() {
+    let owner = OWNER;
+    let depositor = USER1;
+    let mint_amount = 1000_u256;
+    let deposit_amount = 1100_u256;
+
+    // Deploy contract
+    let swapx_address = deploy_swapx_contract(owner);
+    let swapx = ISwapXDispatcher { contract_address: swapx_address };
+    let eth_dispatcher = deploy_mock_erc20();
+    let eth_address = eth_dispatcher.contract_address;
+    let erc20 = ERC20ABIDispatcher { contract_address: eth_address };
+
+    // Prepare user for deposit
+    start_cheat_caller_address(eth_address, owner);
+    eth_dispatcher.mint(depositor, mint_amount);
+    stop_cheat_caller_address(eth_address);
+
+    // Approve spender to use tokens
+    start_cheat_caller_address(eth_address, depositor);
+    erc20.approve(swapx_address, mint_amount);
+    stop_cheat_caller_address(eth_address);
+
+    // Owner with admin role whitelist token address
+    start_cheat_caller_address(swapx_address, owner);
+    swapx.add_supported_token(eth_address);
+    stop_cheat_caller_address(swapx_address);
+
+    // User attempts to deposit more than balance
+    start_cheat_caller_address(swapx_address, depositor);
+    swapx.deposit(eth_address, deposit_amount); // user has 100 tokens less
+    stop_cheat_caller_address(swapx_address);
+}
+
+#[should_panic(expected: 'ERC20: insufficient allowance')]
+#[test]
+fn test_deposit_insufficient_allowance_fails() {
+    let owner = OWNER;
+    let depositor = USER1;
+
+    // Deploy contract
+    let swapx_address = deploy_swapx_contract(owner);
+    let swapx = ISwapXDispatcher { contract_address: swapx_address };
+    let eth_dispatcher = deploy_mock_erc20();
+    let eth_address = eth_dispatcher.contract_address;
+    let erc20 = ERC20ABIDispatcher { contract_address: eth_address };
+
+    // Prepare user for deposit
+    start_cheat_caller_address(eth_address, owner);
+    eth_dispatcher.mint(depositor, 1000_u256);
+    stop_cheat_caller_address(eth_address);
+
+    // Approve spender to use tokens
+    start_cheat_caller_address(eth_address, depositor);
+    erc20.approve(swapx_address, 500_u256); // Only approve 500
+    stop_cheat_caller_address(eth_address);
+
+    // Owner with admin role whitelist token address
+    start_cheat_caller_address(swapx_address, owner);
+    swapx.add_supported_token(eth_address);
+    stop_cheat_caller_address(swapx_address);
+
+    // User attempts to deposit more than allowance
+    start_cheat_caller_address(swapx_address, depositor);
+    swapx.deposit(eth_address, 600_u256); // User only allowed 500 tokens
+    stop_cheat_caller_address(swapx_address);
+}
