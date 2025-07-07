@@ -4,15 +4,15 @@ use starknet::ContractAddress;
 pub trait IMintable<TContractState> {
     fn mint(ref self: TContractState, recipient: ContractAddress, amount: u256);
     // fn approve( ref self: TContractState, spender: ContractAddress, amount: u256,
-    // ) -> bool;
-    // fn balance_of(ref self: TContractState, account: ContractAddress) -> u256;
+// ) -> bool;
+// fn balance_of(ref self: TContractState, account: ContractAddress) -> u256;
 }
 
 #[starknet::contract]
 pub mod ERC20 {
     use openzeppelin_access::ownable::OwnableComponent;
     use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
-    use starknet::{ContractAddress};
+    use starknet::ContractAddress;
     use super::IMintable;
 
 
@@ -61,13 +61,12 @@ pub mod ERC20 {
         fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
             self.erc20.mint(recipient, amount);
         }
-
         // fn approve(ref self: ContractState, spender: ContractAddress, amount: u256) -> bool {
-        //     self.erc20.approve(spender, amount)
-        // }
+    //     self.erc20.approve(spender, amount)
+    // }
 
         // fn balance_of(ref self: ContractState, account: ContractAddress) -> u256 {
-        //     self.erc20.balance_of(account)
-        // }
+    //     self.erc20.balance_of(account)
+    // }
     }
 }

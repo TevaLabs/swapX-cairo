@@ -1,14 +1,15 @@
 use core::num::traits::Zero;
+use openzeppelin_token::erc20::interface::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
 use snforge_std::{
-    EventSpyAssertionsTrait, EventSpyTrait, spy_events, start_cheat_caller_address, stop_cheat_caller_address,
+    EventSpyAssertionsTrait, EventSpyTrait, spy_events, start_cheat_caller_address,
+    stop_cheat_caller_address,
 };
 use starknet::ContractAddress;
 use swapx::interfaces::iswapx::{ISwapXDispatcher, ISwapXDispatcherTrait};
-use swapx::swapx::SwapX::{Event, TokenSupported};
-use super::utils::{OWNER, USER1, deploy_swapx_contract, deploy_mock_erc20,};
-use openzeppelin_token::erc20::interface::{ERC20ABIDispatcher, ERC20ABIDispatcherTrait};
 use swapx::mocks::erc20::IMintableDispatcherTrait;
 use swapx::swapx::SwapX;
+use swapx::swapx::SwapX::{Event, TokenSupported};
+use super::utils::{OWNER, USER1, deploy_mock_erc20, deploy_swapx_contract};
 
 #[test]
 fn test_add_supported_tokens_as_admin() {
@@ -74,7 +75,7 @@ fn test_add_supported_tokens_with_zero_token_address() {
 #[test]
 fn test_deposit_success() {
     // Deploy contracts
-    let owner: ContractAddress  = OWNER;
+    let owner: ContractAddress = OWNER;
     let depositor: ContractAddress = USER1;
     let swapx_address = deploy_swapx_contract(owner);
     let swapx = ISwapXDispatcher { contract_address: swapx_address };
@@ -111,10 +112,14 @@ fn test_deposit_success() {
 
     // Verify event emission
     let events = spy.get_events();
-    assert(events.events.len() == 3, 'Expected three events'); // TokenSupported, TokenDeposited and Transfer
+    assert(
+        events.events.len() == 3, 'Expected three events',
+    ); // TokenSupported, TokenDeposited and Transfer
 
     let expected_deposited_event = SwapX::Event::TokenDeposited(
-        SwapX::TokenDeposited { user: depositor, token_address: eth_address, amount: deposit_amount },
+        SwapX::TokenDeposited {
+            user: depositor, token_address: eth_address, amount: deposit_amount,
+        },
     );
     let expected_events = array![(swapx_address, expected_deposited_event)];
     spy.assert_emitted(@expected_events);

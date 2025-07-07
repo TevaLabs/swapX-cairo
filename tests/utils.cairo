@@ -1,7 +1,7 @@
+use openzeppelin_token::erc20::interface::ERC20ABIDispatcher;
 use snforge_std::{ContractClassTrait, DeclareResultTrait, declare};
 use starknet::ContractAddress;
-use openzeppelin_token::erc20::interface::{ERC20ABIDispatcher,};
-use swapx::mocks::erc20::{IMintableDispatcher,};
+use swapx::mocks::erc20::IMintableDispatcher;
 
 pub const OWNER: ContractAddress = 'owner'.try_into().unwrap();
 pub const USER1: ContractAddress = 'user1'.try_into().unwrap();
