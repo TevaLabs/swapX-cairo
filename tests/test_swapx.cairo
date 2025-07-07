@@ -189,13 +189,14 @@ fn test_deposit_unsupported_token_fails() {
     stop_cheat_caller_address(swapx_address);
 }
 
-#[should_panic(expected: 'ERC20: insufficient allowance')]
+#[should_panic(expected: 'ERC20: insufficient balance')]
 #[test]
 fn test_deposit_insufficient_token_balance_fails() {
     let owner = OWNER;
     let depositor = USER1;
     let mint_amount = 1000_u256;
     let deposit_amount = 1100_u256;
+    let allowance_amount = 2000_u256;
 
     // Deploy contract
     let swapx_address = deploy_swapx_contract(owner);
@@ -211,7 +212,7 @@ fn test_deposit_insufficient_token_balance_fails() {
 
     // Approve spender to use tokens
     start_cheat_caller_address(eth_address, depositor);
-    erc20.approve(swapx_address, mint_amount);
+    erc20.approve(swapx_address, allowance_amount); // Approve more than deposit amount
     stop_cheat_caller_address(eth_address);
 
     // Owner with admin role whitelist token address
