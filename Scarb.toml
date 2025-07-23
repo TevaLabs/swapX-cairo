@@ -7,6 +7,8 @@ edition = "2024_07"
 starknet = "2.11.4"
 openzeppelin_access = "1.0.0"
 openzeppelin_introspection = "1.0.0"
+ekubo = { git = "https://github.com/ekuboprotocol/abis" }
+openzeppelin = "1.0.0"
 
 [dev-dependencies]
 snforge_std = "0.44.0"
